@@ -1,86 +1,109 @@
-import express from "express"
-import cors from "cors"
-import { readFile } from "node:fs/promises"
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
+import express from "express";
+import cors from "cors";
+import { readFile } from "node:fs/promises";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import multer from "multer";
+import path from "path";
+import { writeFile } from "fs/promises";
 
-const users = JSON.parse( await readFile( "./users.json", "utf8" ) )
+const users = JSON.parse(await readFile("./users.json", "utf8"));
 
-const PORT = process.env.PORT
-const app = express()
+const PORT = process.env.PORT;
+const app = express();
 
-app.use( express.json() )
-app.use( cors() )
+app.use(express.json());
+app.use(cors());
 
-app.get( "/data", async ( req, res ) => {
+// uplaod file
 
-	if ( !req.headers.jwt_token ) {
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+app.post("/upload", upload.single("file"), async (req, res) => {
+  const file = req.file;
 
-		res.status( 401 ).send( { message: "Unauthorized" } )
+  if (!file) {
+    return res.status(400).send({ message: "No file" });
+  }
 
-		return
-	}
+  const base64 = file.buffer.toString("base64");
 
-	const token = req.headers.jwt_token
+  const users = JSON.parse(await readFile("./users.json", "utf8"));
 
-	try {
+  // masalan: javlon useriga rasm biriktiramiz
+  users.javlon.avatar = {
+    filename: file.originalname,
+    mimetype: file.mimetype,
+    data: base64,
+  };
 
-		const user = await jwt.verify( token, process.env.JWT_SECRET )
+  await writeFile("./users.json", JSON.stringify(users, null, 2));
 
-		if ( user.isAdmin ) {
+  res.send({ message: "Saved to JSON ✅" });
+});
 
-			res.send( [ 1, 2, 3, 4 ] )
-		}
-		else {
+app.get("/data", async (req, res) => {
+  if (!req.headers.jwt_token) {
+    res.status(401).send({ message: "Unauthorized" });
 
-			res.send( [] )
-		}
-	}
-	catch( error ) {
+    return;
+  }
 
-		res.status( 401 ).send( { message: error.message } )
+  const token = req.headers.jwt_token;
 
-		console.log( error )
-	}
-} )
+  try {
+    const user = await jwt.verify(token, process.env.JWT_SECRET);
 
-app.post( "/login", async ( req, res ) => {
+    if (user.isAdmin) {
+      res.send([1, 2, 3, 4]);
+    } else {
+      res.send([]);
+    }
+  } catch (error) {
+    res.status(401).send({ message: error.message });
 
-	const { username, password } = req.body
+    console.log(error);
+  }
+});
 
-	if ( !username || !password ) {
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
 
-		res.status( 400 ).send( { message: "`username` and `password` must include body" } )
-	}
+  if (!username || !password) {
+    res
+      .status(400)
+      .send({ message: "`username` and `password` must include body" });
+  }
 
-	if ( !users[ username ] ) {
+  if (!users[username]) {
+    res.status(401).send({ message: `${username} not found` });
 
-		res.status( 401 ).send( { message: `${ username } not found` } )
+    return;
+  }
 
-		return
-	}
+  const user = users[username];
 
-	const user = users[ username ]
+  const isValid = await bcrypt.compare(password, user.password);
 
-	const isValid = await bcrypt.compare( password, user.password )
+  if (!isValid) {
+    res.status(401).send({ message: `Wrong password` });
 
-	if ( !isValid ) {
+    return;
+  }
 
-		res.status( 401 ).send( { message: `Wrong password` } )
+  const token = jwt.sign(
+    { username, isAdmin: user.isAdmin },
+    process.env.JWT_SECRET,
+  );
 
-		return
-	}
+  res.send({ username, token });
+});
 
-	const token = jwt.sign( { username, isAdmin: user.isAdmin }, process.env.JWT_SECRET )
-
-	res.send( { username, token } )
-} )
-
-app.listen( PORT, () => console.log( PORT ) )
+app.listen(PORT, () => console.log(PORT));
 
 //
 
-async function hashPassword( plainPassword ) {
-
-	return await bcrypt.hash( plainPassword, 10 )
+async function hashPassword(plainPassword) {
+  return await bcrypt.hash(plainPassword, 10);
 }

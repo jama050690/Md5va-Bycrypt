@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SignIn</title>
+  </head>
+  <body>
+    <div id="box">
+      <form id="login">
+        <p id="errorMsg"></p>
+        <input
+          type="username"
+          id="username"
+          minlength="2"
+          required
+          autocomplete="username"
+        />
+        <input
+          type="password"
+          id="password"
+          minlength="4"
+          required
+          autocomplete="password"
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

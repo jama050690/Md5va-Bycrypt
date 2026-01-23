@@ -12,7 +12,7 @@ const passwordElement = document.getElementById("password");
 init();
 
 async function init() {
-  if (location.pathname === "/" || "index") {
+  if (location.pathname === "/") {
     if (!localStorage.getItem("app_user")) {
       location.href = "/login";
     }
@@ -79,7 +79,7 @@ loginElement.onsubmit = async (e) => {
 };
 
 async function makeLogin(body) {
-  const response = await fetch("http://localhost:3000/index", {
+  const response = await fetch("http://localhost:3000/login", {
     method: "post",
     headers: {
       "Content-Type": "application/json",

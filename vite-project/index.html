@@ -6,13 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>web</title>
   </head>
-  <body class="img">
-    <div class="block">
+  <body>
+    <div class="w-[400px] h-[200px] bg-blue-600 text-2xl text-amber-600">
       <div id="home">
         <h1>Welcome, <span id="whoAmI">Guest</span>!</h1>
-        <button id="logoutBtn">LOGOUT</button>
+        <button id="logoutBtn">Logout</button>
       </div>
     </div>
+    <form id="login">
+      <p id="errorMsg"></p>
+      <input
+        type="username"
+        id="username"
+        minlength="2"
+        required
+        autocomplete="username"
+      />
+      <input
+        type="password"
+        id="password"
+        minlength="4"
+        required
+        autocomplete="password"
+      />
+      <button>Login</button>
+    </form>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

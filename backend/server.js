@@ -3,9 +3,6 @@ import cors from "cors";
 import { readFile } from "node:fs/promises";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import multer from "multer";
-import path from "path";
-import { writeFile } from "fs/promises";
 
 const users = JSON.parse(await readFile("./users.json", "utf8"));
 
@@ -14,34 +11,6 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-
-// uplaod file
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-});
-app.post("/upload", upload.single("file"), async (req, res) => {
-  const file = req.file;
-
-  if (!file) {
-    return res.status(400).send({ message: "No file" });
-  }
-
-  const base64 = file.buffer.toString("base64");
-
-  const users = JSON.parse(await readFile("./users.json", "utf8"));
-
-  // masalan: javlon useriga rasm biriktiramiz
-  users.javlon.avatar = {
-    filename: file.originalname,
-    mimetype: file.mimetype,
-    data: base64,
-  };
-
-  await writeFile("./users.json", JSON.stringify(users, null, 2));
-
-  res.send({ message: "Saved to JSON ✅" });
-});
 
 app.get("/data", async (req, res) => {
   if (!req.headers.jwt_token) {
